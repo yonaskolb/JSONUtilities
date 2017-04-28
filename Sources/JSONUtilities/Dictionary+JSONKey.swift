@@ -276,7 +276,7 @@ extension Dictionary where Key: StringProtocol {
 
     var dictionary: [String: T] = [:]
     for (key, _) in jsonDictionary {
-      if let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, key) }) {
+      if let item = try invalidItemBehaviour.decodeItem(location: .dictionary(jsonDictionary, key: key), decode: { try decode(jsonDictionary, key) }) {
           dictionary[key] = item
       }
     }
@@ -289,9 +289,11 @@ extension Dictionary where Key: StringProtocol {
   //swiftlint:disable:next large_tuple
   fileprivate func decodeArray<T>(atKeyPath keyPath: Key, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove, decode: (Key, JSONArray, Any) throws -> T) throws -> [T] {
     let jsonArray = try JSONArrayForKey(atKeyPath: keyPath)
-
+    var index = 0
     return try jsonArray.flatMap { value in
-      try invalidItemBehaviour.decodeItem(decode: { try decode(keyPath, jsonArray, value) })
+      let decodedValue = try invalidItemBehaviour.decodeItem(location: .array(jsonArray, index: index), decode: { try decode(keyPath, jsonArray, value) })
+      index += 1
+      return decodedValue
     }
   }
 

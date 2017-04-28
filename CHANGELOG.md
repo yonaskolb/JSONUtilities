@@ -4,6 +4,7 @@
 
 - Decoded typed dictionaries now filter out invalid objects by default instead of failing the whole response. This aligns with the defaults of how arrays are decoded.
 - Typed dictionaries and array functions now allow for specifiying the behaviour of when a child item encounters an error. See [InvalidItemBehaviour](Readme.md#InvalidItemBehaviour) for more details. The default is to remove these child items with `.remove`
+- The above behaviours can be listened to via InvalidItemNotifier
 - DecodingError has been restructured, so that every error provides:
 	- dictionary
 	- keypath

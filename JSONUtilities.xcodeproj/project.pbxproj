@@ -37,6 +37,7 @@
 		4FE3C0551C00EEE800607CC4 /* JSONDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE3C0541C00EEE800607CC4 /* JSONDecodingTests.swift */; };
 		4FF31F3B1D7CBF8C00C9CCC8 /* Dictionary+KeyPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF31F3A1D7CBF8C00C9CCC8 /* Dictionary+KeyPathTests.swift */; };
 		CC0188FF1EB2288A00D4EA87 /* InvalidItemBehaviour.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0188FE1EB2288A00D4EA87 /* InvalidItemBehaviour.swift */; };
+		CC0189011EB2608B00D4EA87 /* InvalidItemNotifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0189001EB2608B00D4EA87 /* InvalidItemNotifierTests.swift */; };
 		CCE82AD11EAA41900035C9F1 /* InvalidItemBehaviourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE82ACF1EAA41450035C9F1 /* InvalidItemBehaviourTests.swift */; };
 		EAD4CA401D894B0D001842D6 /* URL+JSONPrimitiveConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD4CA3F1D894B0D001842D6 /* URL+JSONPrimitiveConvertible.swift */; };
 /* End PBXBuildFile section */
@@ -86,6 +87,7 @@
 		4FE3C05B1C00F05700607CC4 /* JSONFiles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONFiles.swift; sourceTree = "<group>"; };
 		4FF31F3A1D7CBF8C00C9CCC8 /* Dictionary+KeyPathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Dictionary+KeyPathTests.swift"; sourceTree = "<group>"; };
 		CC0188FE1EB2288A00D4EA87 /* InvalidItemBehaviour.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InvalidItemBehaviour.swift; sourceTree = "<group>"; };
+		CC0189001EB2608B00D4EA87 /* InvalidItemNotifierTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InvalidItemNotifierTests.swift; sourceTree = "<group>"; };
 		CCE82ACF1EAA41450035C9F1 /* InvalidItemBehaviourTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InvalidItemBehaviourTests.swift; sourceTree = "<group>"; };
 		EAD4CA3F1D894B0D001842D6 /* URL+JSONPrimitiveConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "URL+JSONPrimitiveConvertible.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -156,6 +158,7 @@
 				4F0842021C96143500C28467 /* JSONPrimitiveConvertibleTests.swift */,
 				4FF31F3A1D7CBF8C00C9CCC8 /* Dictionary+KeyPathTests.swift */,
 				CCE82ACF1EAA41450035C9F1 /* InvalidItemBehaviourTests.swift */,
+				CC0189001EB2608B00D4EA87 /* InvalidItemNotifierTests.swift */,
 			);
 			path = JSONUtilitiesTests;
 			sourceTree = "<group>";
@@ -408,6 +411,7 @@
 				4FF31F3B1D7CBF8C00C9CCC8 /* Dictionary+KeyPathTests.swift in Sources */,
 				4F4339691D3C159900C64537 /* Dictionary+Equatable.swift in Sources */,
 				4FD43DD81D3C317800075410 /* JSONFiles.swift in Sources */,
+				CC0189011EB2608B00D4EA87 /* InvalidItemNotifierTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

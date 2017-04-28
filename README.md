@@ -75,6 +75,26 @@ When decoding arrays or dictionaries an `invalidItemBehaviour` parameter can be 
 - `.value(T)` Provide an alternative value
 - `.custom((DecodingError) -> InvalidItemBehaviour)` Lets you specify the behaviour based on the specific DecodingError
 
+### Events
+Sometimes you wish to be notified when a dictionary or array item failed to decode, especially the silent kind of behaviours such as `.remove` and `.value`. You can use `InvalidItemNotifier` to notify you of such events. These events have an action property that is either `.removed`, `.failed` or `.changedValue` depending on the behaviour. The event also has the InvalidItemLocation, InvalidItemBehaviour and DecodingError that caused the event to occur.
+You can add listeners to `InvalidItemNotifier` like this:
+
+```
+let listener = InvalidItemNotifier.addListener { event in
+	let action: String
+	switch event.action {
+      case .removed:
+        action = "an item was removed"
+      case .changedValue(let value):
+        action = "an item had it's value changed to \(value)"
+      case .failed:
+        action = "the whole \(event.location) failed to decode"
+	}
+	print("Decoding Error occured in child item: \"\(event.error)\" so \(action) because the behaviour was \(event.behaviour)")
+}
+// later: listener.stopListening() or InvalidItemBehaviourNotifier.removeListener(listener)
+```
+
 ## Examples of JSON loading
 
 ### From file
