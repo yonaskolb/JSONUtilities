@@ -41,6 +41,38 @@ class Dictionary_KeyPathTests: XCTestCase {
     XCTAssertEqual(calculatedValue, expectedValue)
   }
 
+  func testAccessArrayIndex() {
+    let expectedValue = "value"
+    let dictionary = [
+      "root_key": [
+          "incorrectValue1",
+          expectedValue,
+          "incorrectValue2"
+      ]
+    ]
+    guard let calculatedValue = dictionary[keyPath: "root_key.1"] as? String else {
+      XCTFail(#function)
+      return
+    }
+    XCTAssertEqual(calculatedValue, expectedValue)
+  }
+
+  func testAccessArrayIndexAndThenDictioanry() {
+    let expectedValue = "value"
+    let dictionary = [
+      "root_key": [
+        ["incorrectDictionary1": "incorrectValue"],
+        ["firstLevelKey": expectedValue],
+        ["incorrectDictionary1": "incorrectValue"]
+      ]
+    ]
+    guard let calculatedValue = dictionary[keyPath: "root_key.1.firstLevelKey"] as? String else {
+      XCTFail(#function)
+      return
+    }
+    XCTAssertEqual(calculatedValue, expectedValue)
+  }
+
   func testAccessRepeatedKey_InSequence_OneLevelDeep() {
     let expectedValue = "value"
     let dictionary = [
@@ -49,6 +81,22 @@ class Dictionary_KeyPathTests: XCTestCase {
       ]
     ]
     guard let calculatedValue = dictionary[keyPath: "root_key.root_key"] as? String else {
+      XCTFail(#function)
+      return
+    }
+    XCTAssertEqual(calculatedValue, expectedValue)
+  }
+
+  func testAccessInDictionary_withIntKey() {
+    let expectedValue = "value"
+    let dictionary = [
+      "root_key": [
+        "1": [
+          "root_key": expectedValue
+        ]
+      ]
+    ]
+    guard let calculatedValue = dictionary[keyPath: "root_key.1.root_key"] as? String else {
       XCTFail(#function)
       return
     }

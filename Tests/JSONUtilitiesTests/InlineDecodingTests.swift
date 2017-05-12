@@ -9,7 +9,7 @@
 import XCTest
 @testable import JSONUtilities
 
-private let randomKey = "aaaaaaa"
+private let randomKey: KeyPath = "aaaaaaa"
 
 class InlineDecodingTests: XCTestCase {
 

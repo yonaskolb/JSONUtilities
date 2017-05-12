@@ -9,7 +9,7 @@
 import XCTest
 @testable import JSONUtilities
 
-private let invalidKey = "invalidKey"
+private let invalidKey: KeyPath = "invalidKey"
 
 class JSONPrimitiveConvertibleTests: XCTestCase {
 

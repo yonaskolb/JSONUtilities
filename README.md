@@ -76,6 +76,16 @@ When decoding arrays or dictionaries an `invalidItemBehaviour` parameter can be 
 - `.value(T)` Provide an alternative value
 - `.custom((DecodingError) -> InvalidItemBehaviour)` Lets you specify the behaviour based on the specific DecodingError
 
+## KeyPath
+Each json(atKeyPath:) function takes a KeyPath. This is an enum with 2 cases:
+
+- `key(String)` - this does a single key lookup
+- `keyPath([String])` - this does a nested key lookup
+
+KeyPath can be initialized with a string literal. When doing so, if there are any `.` it will be treated as a keypath instead of a simple key.
+
+When providing keyPaths, an int allows lookup up a value in an array by index. eg: `"myArray.1"` string literal will look for the key `myArray ` and then the 2nd item if that value is an array (indices are 0 based)
+
 ## Examples of JSON loading
 
 ### From file

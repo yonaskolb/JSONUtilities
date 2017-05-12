@@ -16,6 +16,8 @@
 	- incorrectType
 	- conversionFailure
 - `[String: RawRepresentable]` can be now be decoded
+- KeyPath has changed to enum with .key(String) and .keyPath([String]) cases. It can still be initialized with a string literal, with `.` representing keyPaths.
+- Array indexes can now also be pathed into using an int in the keyPath, e.g: `myArray.2.valueInArrayItem`
 
 Thanks to [Yonas Kolb](https://github.com/yonaskolb)
 
