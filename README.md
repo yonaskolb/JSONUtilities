@@ -67,12 +67,16 @@ e.g. if `MyClass` and `MyStruct` conform to `JSONObjectConvertible` protocol
 - `[JSONKey: JSONPrimitiveConvertible]`
 - `[JSONKey: RawRepresentable]`
 
-String already conforms to JSONKey, and if you want other keys like enums just make them conform to JSONKey e.g:
+String already conforms to JSONKey. It's also easy to make enum keys by just making them conform to JSONKey which requires a `var key: String { get }`, and an `init?(rawValue: String)` which RawRepresentable already conforms to e.g:
 
 ```
 enum MyEnum: String, JSONKey {
 	case one
 	case two
+	
+	var key: String {
+		return rawValue
+	}
 }
 ```
 
