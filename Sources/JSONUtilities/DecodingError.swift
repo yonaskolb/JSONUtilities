@@ -33,7 +33,7 @@ public struct DecodingError: Error, CustomStringConvertible, CustomDebugStringCo
 
   init(dictionary: [AnyHashable: Any], keyPath: KeyPath, expectedType: Any.Type, value: Any, array: JSONArray? = nil, reason: Reason) {
     self.dictionary = dictionary
-    self.keyPath = keyPath.string
+    self.keyPath = keyPath.key
     self.expectedType = expectedType
     self.value = value
     self.reason = reason

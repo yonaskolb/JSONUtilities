@@ -16,17 +16,20 @@ extension Float : JSONRawType {}
 extension String : JSONRawType {}
 extension Bool : JSONRawType {}
 
-// Simple protocol used to extend a JSONDictionary
-public protocol StringProtocol {
-  var string: String { get }
+public protocol JSONKey {
+  var key: String { get }
+  init?(rawValue: String)
 }
-extension String: StringProtocol {
-  public var string: String {
-    return self
+
+extension String: JSONKey {
+  public var key: String { return self }
+
+  public init(rawValue: String) {
+    self = rawValue
   }
 }
 
-extension Dictionary where Key: StringProtocol {
+extension Dictionary where Key: JSONKey {
 
   // MARK: JSONRawType type
 
@@ -79,43 +82,43 @@ extension Dictionary where Key: StringProtocol {
   // MARK: [String: JSONObjectConvertible] type
 
   /// Decodes a mandatory dictionary
-  public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: T] {
+  public func json<T: JSONObjectConvertible, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [K: T] {
     return try decodeDictionary(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { jsonDictionary, key in
       return try jsonDictionary.json(atKeyPath: key) as T
     }
   }
 
   /// Decodes an optional dictionary
-  public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: T]? {
-    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [String: T]
+  public func json<T: JSONObjectConvertible, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? {
+    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [K: T]
   }
 
   // MARK: [String: JSONRawType] type
 
   /// Decodes a mandatory dictionary
-  public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: T] {
+  public func json<T: JSONRawType, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [K: T] {
     return try decodeDictionary(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { jsonDictionary, key in
       return try jsonDictionary.json(atKeyPath: key) as T
     }
   }
 
   /// Decodes an optional dictionary
-  public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: T]? {
-    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [String: T]
+  public func json<T: JSONRawType, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? {
+    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [K: T]
   }
 
   // MARK: [String: JSONPrimitiveConvertible] type
 
   /// Decodes a mandatory dictionary
-  public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: T] {
+  public func json<T: JSONPrimitiveConvertible, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [K: T] {
     return try decodeDictionary(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { jsonDictionary, key in
       return try jsonDictionary.json(atKeyPath: key) as T
     }
   }
 
   /// Decodes an optional dictionary
-  public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: T]? {
-    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [String: T]
+  public func json<T: JSONPrimitiveConvertible, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? {
+    return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [K: T]
   }
 
   // MARK: Decodable types
@@ -186,7 +189,7 @@ extension Dictionary where Key: StringProtocol {
   // MARK: [String: RawRepresentable] type
 
   /// Decode a dictionary of custom RawRepresentable types with a mandatory key
-  public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: T] where T.RawValue:JSONRawType {
+  public func json<T: RawRepresentable, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [K: T] where T.RawValue:JSONRawType {
     return try decodeDictionary(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { jsonDictionary, key in
       let rawValue: T.RawValue = try jsonDictionary.getValue(atKeyPath: key)
 
@@ -198,7 +201,7 @@ extension Dictionary where Key: StringProtocol {
   }
 
   /// Optionally decode a dictionary of RawRepresentable types with a mandatory key
-  public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: T]? where T.RawValue:JSONRawType {
+  public func json<T: RawRepresentable, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? where T.RawValue:JSONRawType {
     return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
   }
 
@@ -270,13 +273,13 @@ extension Dictionary where Key: StringProtocol {
 
   // MARK: Dictionary decoding
 
-  fileprivate func decodeDictionary<T>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove, decode: (JSONDictionary, KeyPath) throws -> T) throws -> [String: T] {
+  fileprivate func decodeDictionary<T, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove, decode: (JSONDictionary, KeyPath) throws -> T) throws -> [K: T] {
     let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
 
-    var dictionary: [String: T] = [:]
+    var dictionary: [K: T] = [:]
     for (key, _) in jsonDictionary {
-      if let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath(key)) }) {
-          dictionary[key] = item
+      if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath(rawValue: key)) }) {
+        dictionary[jsonKey] = item
       }
     }
 

@@ -8,12 +8,12 @@
 
 import Foundation
 
-public enum KeyPath {
+public enum KeyPath: JSONKey {
   case key(String)
   case keyPath([String])
 
-  public init(_ keyPath: String) {
-    var parts = keyPath.components(separatedBy: ".")
+  public init(rawValue: String) {
+    var parts = rawValue.components(separatedBy: ".")
 
     //removes trailing .
     if parts.count > 1, let last = parts.last, last.isEmpty {
@@ -23,11 +23,11 @@ public enum KeyPath {
     if parts.count > 1 {
       self = .keyPath(parts)
     } else {
-      self = .key(keyPath)
+      self = .key(rawValue)
     }
   }
 
-  public var string: String {
+  public var key: String {
     switch self {
       case .key(let key): return key
       case .keyPath(let keys): return keys.joined(separator: ".")
@@ -89,14 +89,14 @@ extension KeyPath: ExpressibleByStringLiteral {
   public typealias UnicodeScalarLiteralType = String
 
   public init(stringLiteral value: KeyPath.StringLiteralType) {
-    self = KeyPath(value)
+    self = KeyPath(rawValue: value)
   }
 
   public init(extendedGraphemeClusterLiteral value: KeyPath.ExtendedGraphemeClusterLiteralType) {
-    self = KeyPath(value)
+    self = KeyPath(rawValue: value)
   }
 
   public init(unicodeScalarLiteral value: KeyPath.UnicodeScalarLiteralType) {
-    self = KeyPath(value)
+    self = KeyPath(rawValue: value)
   }
 }

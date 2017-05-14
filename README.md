@@ -60,12 +60,21 @@ e.g. if `MyClass` and `MyStruct` conform to `JSONObjectConvertible` protocol
 - `MyStruct`
 - [`MyStruct`]
 
-### Typed dictionaries with a `String` key
+### Dictionaries with a `JSONKey`
 
-- `[String: JSONRawType]`
-- `[String: JSONObjectConvertible]`
-- `[String: JSONPrimitiveConvertible]`
-- `[String: RawRepresentable]`
+- `[JSONKey: JSONRawType]`
+- `[JSONKey: JSONObjectConvertible]`
+- `[JSONKey: JSONPrimitiveConvertible]`
+- `[JSONKey: RawRepresentable]`
+
+String already conforms to JSONKey, and if you want other keys like enums just make them conform to JSONKey e.g:
+
+```
+enum MyEnum: String, JSONKey {
+	case one
+	case two
+}
+```
 
 ## InvalidItemBehaviour
 

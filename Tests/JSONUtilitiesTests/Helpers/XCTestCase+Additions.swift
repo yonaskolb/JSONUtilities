@@ -33,7 +33,7 @@ extension XCTestCase {
         return
       }
       XCTAssertTrue(error.reason == reason, "DecodingError failed because of \"\(error.reason)\" but was supposed to fail for \"\(reason)\"")
-      XCTAssertTrue(error.keyPath == keyPath.string, "DecodingError failed at keyPath \"\(error.keyPath)\", but was supposed to fail at \"\(keyPath)\"")
+      XCTAssertTrue(error.keyPath == keyPath.key, "DecodingError failed at keyPath \"\(error.keyPath)\", but was supposed to fail at \"\(keyPath)\"")
     }
   }
 }
