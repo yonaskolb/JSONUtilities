@@ -9,7 +9,7 @@
 import Foundation
 @testable import JSONUtilities
 
-private let randomKey = "asdfghj"
+private let randomKey: KeyPath = "asdfghj"
 
 struct MockParent {
 

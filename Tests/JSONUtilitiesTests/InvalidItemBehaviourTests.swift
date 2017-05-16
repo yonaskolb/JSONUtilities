@@ -9,11 +9,10 @@
 import XCTest
 @testable import JSONUtilities
 
-private let randomKey = "aaaaaaa"
-
 class InvalidItemBehaviourTests: XCTestCase {
 
-  let key = "key"
+  private let randomKey: KeyPath = "aaaaaaa"
+  private let key: KeyPath = "key"
 
   let dictionaryString = [
     "key": [

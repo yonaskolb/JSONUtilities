@@ -25,6 +25,13 @@ extension MockChild : JSONObjectConvertible {
   }
 }
 
+// for [MockParent.MockEnum: SomeType] decoding support
+extension MockParent.MockEnum: JSONKey {
+  var key: String {
+    return rawValue
+  }
+}
+
 // MARK: Extensions necessary for testing
 
 extension MockChild : Equatable {}

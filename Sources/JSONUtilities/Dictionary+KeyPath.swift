@@ -15,19 +15,11 @@ extension Dictionary {
   /// - parameter keyPath: A string of keys separated by dots
   ///
   /// - returns: Optionally returns a generic value for this keyPath or nil
-  subscript(keyPath keyPath: StringProtocol) -> Any? {
-    var keys = keyPath.components(separatedBy: ".")
-    guard let firstKey = keys.first as? Key,
-          let value = self[firstKey]
-      else { return nil }
-
-    keys.removeFirst()
-
-    if !keys.isEmpty, let subDictionary = value as? [Key : Any] {
-      let rejoined = keys.joined(separator: ".")
-      return subDictionary[keyPath: rejoined]
+  subscript(keyPath keyPath: KeyPath) -> Any? {
+    guard let dictionary = self as? JSONDictionary else {
+      return nil
     }
-    return value
+    return keyPath.getValue(dictionary: dictionary)
   }
 
 }

@@ -31,9 +31,9 @@ public struct DecodingError: Error, CustomStringConvertible, CustomDebugStringCo
   /// the value that caused the error
   public let value: Any
 
-  init(dictionary: [AnyHashable: Any], keyPath: StringProtocol, expectedType: Any.Type, value: Any, array: JSONArray? = nil, reason: Reason) {
+  init(dictionary: [AnyHashable: Any], keyPath: KeyPath, expectedType: Any.Type, value: Any, array: JSONArray? = nil, reason: Reason) {
     self.dictionary = dictionary
-    self.keyPath = keyPath.string
+    self.keyPath = keyPath.key
     self.expectedType = expectedType
     self.value = value
     self.reason = reason

@@ -9,7 +9,7 @@
 import XCTest
 @testable import JSONUtilities
 
-private let randomKey = "aaaaaaa"
+private let randomKey: KeyPath = "aaaaaaa"
 
 class InlineDecodingTests: XCTestCase {
 
@@ -128,6 +128,24 @@ class InlineDecodingTests: XCTestCase {
     let decodedEnums: [MockParent.MockEnum]? = dictionary.json(atKeyPath: "invalid_key")
 
     XCTAssertNil(decodedEnums)
+  }
+
+  func test_decodingStringDictionary_withEnumKey() {
+    let dictionary: JSONDictionary = ["enums": ["one": "two", "two": "one", "value3": "two"]]
+
+    let decodedEnums: [MockParent.MockEnum: String]? = dictionary.json(atKeyPath: "enums")
+
+    let expectedEnums: [MockParent.MockEnum: String] = [.one: "two", .two: "one"]
+    XCTAssertEqual(decodedEnums!, expectedEnums)
+  }
+
+  func test_decodingEnumDictionary_withEnumKey() {
+    let dictionary: JSONDictionary = ["enums": ["one": "two", "two": "one", "value3": "two"]]
+
+    let decodedEnums: [MockParent.MockEnum: MockParent.MockEnum]? = dictionary.json(atKeyPath: "enums")
+
+    let expectedEnums: [MockParent.MockEnum: MockParent.MockEnum] = [.one: .two, .two: .one]
+    XCTAssertEqual(decodedEnums!, expectedEnums)
   }
 
   func testDecodingOfJSONDictionaryArray() {

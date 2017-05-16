@@ -60,12 +60,25 @@ e.g. if `MyClass` and `MyStruct` conform to `JSONObjectConvertible` protocol
 - `MyStruct`
 - [`MyStruct`]
 
-### Typed dictionaries with a `String` key
+### Dictionaries with a `JSONKey`
 
-- `[String: JSONRawType]`
-- `[String: JSONObjectConvertible]`
-- `[String: JSONPrimitiveConvertible]`
-- `[String: RawRepresentable]`
+- `[JSONKey: JSONRawType]`
+- `[JSONKey: JSONObjectConvertible]`
+- `[JSONKey: JSONPrimitiveConvertible]`
+- `[JSONKey: RawRepresentable]`
+
+String already conforms to JSONKey. It's also easy to make enum keys by just making them conform to JSONKey which requires a `var key: String { get }`, and an `init?(rawValue: String)` which RawRepresentable already conforms to e.g:
+
+```
+enum MyEnum: String, JSONKey {
+	case one
+	case two
+	
+	var key: String {
+		return rawValue
+	}
+}
+```
 
 ## InvalidItemBehaviour
 
@@ -75,6 +88,16 @@ When decoding arrays or dictionaries an `invalidItemBehaviour` parameter can be 
 - `.fail` if any of the children encounter an error the whole array or dictionary decoding will fail. For optional properties this means the array or dictionary will return nil, and for non optional properties it will throw an error
 - `.value(T)` Provide an alternative value
 - `.custom((DecodingError) -> InvalidItemBehaviour)` Lets you specify the behaviour based on the specific DecodingError
+
+## KeyPath
+Each json(atKeyPath:) function takes a KeyPath. This is an enum with 2 cases:
+
+- `key(String)` - this does a single key lookup
+- `keyPath([String])` - this does a nested key lookup
+
+KeyPath can be initialized with a string literal. When doing so, if there are any `.` it will be treated as a keypath instead of a simple key.
+
+When providing keyPaths, an int allows lookup up a value in an array by index. eg: `"myArray.1"` string literal will look for the key `myArray ` and then the 2nd item if that value is an array (indices are 0 based)
 
 ## Examples of JSON loading
 

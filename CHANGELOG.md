@@ -16,6 +16,10 @@
 	- incorrectType
 	- conversionFailure
 - `[String: RawRepresentable]` can be now be decoded
+- KeyPath has changed to enum with .key(String) and .keyPath([String]) cases. It can still be initialized with a string literal, with `.` representing keyPaths.
+- Array indexes can now also be pathed into using an int in the keyPath, e.g: `myArray.2.valueInArrayItem`
+- Decoding Dictionaries can now have any key that conforms to JSONKey (which String does by default). So you can for example have enums as the key in a dictionary. Just make your Enum conform to JSONKey. So now you can do: 
+`let counts: [MyEnum: Int] = try jsonDictionary.json(keyKeyPath: "counts")`
 
 Thanks to [Yonas Kolb](https://github.com/yonaskolb)
 

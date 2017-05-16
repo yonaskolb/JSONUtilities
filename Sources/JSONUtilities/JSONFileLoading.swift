@@ -25,7 +25,7 @@ public enum JSONUtilsError: Error {
   case fileNotAJSONDictionary
 }
 
-public extension Dictionary where Key: StringProtocol, Value: Any {
+public extension Dictionary where Key: JSONKey, Value: Any {
 
   /**
    Load a JSONDictionary from a file
