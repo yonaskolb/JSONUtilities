@@ -12,14 +12,14 @@ import Foundation
  *  Use the Decodable protocol to support nested JSON objects
  */
 public protocol JSONObjectConvertible {
-  /**
-   Creates a instance of struct or class from a JSONDictionary
-   
-   - parameter jsonDictionary: The JSON dictionary to parse
-   
-   - throws: Throws a decoding error if decoding failed
-   
-   - returns: A decoded instance of the type conforming to the protocol
-   */
-  init(jsonDictionary: JSONDictionary) throws
+    /**
+     Creates a instance of struct or class from a JSONDictionary
+
+     - parameter jsonDictionary: The JSON dictionary to parse
+
+     - throws: Throws a decoding error if decoding failed
+
+     - returns: A decoded instance of the type conforming to the protocol
+     */
+    init(jsonDictionary: JSONDictionary) throws
 }

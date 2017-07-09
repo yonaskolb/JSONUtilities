@@ -13,15 +13,15 @@ import Foundation
  */
 public protocol JSONPrimitiveConvertible {
 
-  /// The type of the raw JSON value that will be decoded to be transformed
-  associatedtype JSONType: JSONRawType
+    /// The type of the raw JSON value that will be decoded to be transformed
+    associatedtype JSONType: JSONRawType
 
-  /**
-   Create a type from a JSON value
-   
-   - parameter jsonValue: The value to transform
-   
-   - returns: An initialized type if succesful or nil
-   */
-  static func from(jsonValue: JSONType) -> Self?
+    /**
+     Create a type from a JSON value
+
+     - parameter jsonValue: The value to transform
+
+     - returns: An initialized type if succesful or nil
+     */
+    static func from(jsonValue: JSONType) -> Self?
 }

@@ -10,13 +10,12 @@ import Foundation
 @testable import JSONUtilities
 
 struct MockSimpleChild {
-  let name: String
+    let name: String
 }
 
 extension MockSimpleChild: JSONObjectConvertible {
 
-  init(jsonDictionary: JSONDictionary) throws {
-    name = try jsonDictionary.json(atKeyPath: "name")
-  }
-
+    init(jsonDictionary: JSONDictionary) throws {
+        name = try jsonDictionary.json(atKeyPath: "name")
+    }
 }

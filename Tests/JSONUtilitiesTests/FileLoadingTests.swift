@@ -9,49 +9,48 @@
 import XCTest
 @testable import JSONUtilities
 
-typealias NoEscapeFunction = ( () throws -> Void)
+typealias NoEscapeFunction = (() throws -> Void)
 
 class FileLoadingTests: XCTestCase {
 
-  func testLoadingJSONFile() {
-    do {
-      try JSONDictionary.from(url: JSONFilePath.correct)
-    } catch {
-      XCTFail("Unexpected error: \(error)")
+    func testLoadingJSONFile() {
+        do {
+            try JSONDictionary.from(url: JSONFilePath.correct)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
-  }
 
-  func testLoadingJSONFileLoadingFailed() {
-    expectError(.fileLoadingFailed) {
-      try JSONDictionary.from(url: JSONFilePath.missing)
+    func testLoadingJSONFileLoadingFailed() {
+        expectError(.fileLoadingFailed) {
+            try JSONDictionary.from(url: JSONFilePath.missing)
+        }
     }
-  }
 
-  func testLoadingJSONFileDeserializationFailed() {
-    expectError(.fileDeserializationFailed) {
-      try JSONDictionary.from(url: JSONFilePath.invalid)
+    func testLoadingJSONFileDeserializationFailed() {
+        expectError(.fileDeserializationFailed) {
+            try JSONDictionary.from(url: JSONFilePath.invalid)
+        }
     }
-  }
 
-  func testLoadingJSONFileNotAJSONDictionary() {
-    expectError(.fileNotAJSONDictionary) {
-      try JSONDictionary.from(url: JSONFilePath.rootArray)
+    func testLoadingJSONFileNotAJSONDictionary() {
+        expectError(.fileNotAJSONDictionary) {
+            try JSONDictionary.from(url: JSONFilePath.rootArray)
+        }
     }
-  }
 
-  // MARK: Helpers
+    // MARK: Helpers
 
-  fileprivate func expectError(_ expectedError: JSONUtilsError, file: StaticString = #file, line: UInt = #line, block: NoEscapeFunction ) {
-    do {
-      try block()
-    } catch let error {
-      XCTAssert(error is JSONUtilsError, file: file, line: line)
-      if let jsonUtilsError = error as? JSONUtilsError {
-        XCTAssertEqual(jsonUtilsError, expectedError, file: file, line: line)
-      }
-      return
+    fileprivate func expectError(_ expectedError: JSONUtilsError, file: StaticString = #file, line: UInt = #line, block: NoEscapeFunction) {
+        do {
+            try block()
+        } catch let error {
+            XCTAssert(error is JSONUtilsError, file: file, line: line)
+            if let jsonUtilsError = error as? JSONUtilsError {
+                XCTAssertEqual(jsonUtilsError, expectedError, file: file, line: line)
+            }
+            return
+        }
+        XCTFail("No error thrown, expected: \(expectedError)", file: file, line: line)
     }
-    XCTFail("No error thrown, expected: \(expectedError)", file: file, line: line)
-  }
-
 }
