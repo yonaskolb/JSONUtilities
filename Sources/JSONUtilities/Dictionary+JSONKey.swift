@@ -148,7 +148,6 @@ extension Dictionary where Key: JSONKey {
 
     // MARK: [RawRepresentable]
 
-
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [T] where T.RawValue: JSONRawType {
 
         return try decodeArray(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { keyPath, jsonArray, value in
@@ -166,7 +165,6 @@ extension Dictionary where Key: JSONKey {
     }
 
     // MARK: [String: RawRepresentable]
-
 
     public func json<T: RawRepresentable, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [K: T] where T.RawValue: JSONRawType {
         return try decodeDictionary(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { jsonDictionary, key in
@@ -215,6 +213,155 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
         return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
     }
+
+    // MARK: [String: [RawRepresentable]]
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] where T.RawValue: JSONRawType {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [T]] = [:]
+        for key in jsonDictionary.keys {
+            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = array
+        }
+        return dictionary
+    }
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? where T.RawValue: JSONRawType {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [JSONPrimitiveConvertible]]
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [T]] = [:]
+        for key in jsonDictionary.keys {
+            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = array
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [JSONObjectConvertible]]
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [T]] = [:]
+        for key in jsonDictionary.keys {
+            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = array
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [JSONRawType]]
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [T]] = [:]
+        for key in jsonDictionary.keys {
+            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = array
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [[RawRepresentable]]
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] where T.RawValue: JSONRawType {
+
+        return try decodeArray(atKeyPath: keyPath) { (keyPath, jsonArray, value) -> [T] in
+            if let array = value as? [T.RawValue] {
+                return try array.map {
+                    guard let value = T(rawValue: $0) else {
+                        throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: T.self, value: $0, array: array, reason: .incorrectRawRepresentableRawValue)
+                    }
+                    return value
+                }
+            } else {
+                throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: Array<T.RawValue>.self, value: value, array: jsonArray, reason: .incorrectType)
+            }
+        }
+    }
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? where T.RawValue: JSONRawType {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [[JSONPrimitiveConvertible]]
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] {
+
+        return try decodeArray(atKeyPath: keyPath) { (keyPath, jsonArray, value) -> [T] in
+            if let array = value as? JSONArray {
+                return try array.map {
+                    let jsonValue: T.JSONType = try getValue(atKeyPath: keyPath, array: array, value: $0)
+                    guard let transformedValue = T.from(jsonValue: jsonValue) else {
+                        throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: T.self, value: $0, array: jsonArray, reason: .conversionFailure)
+                    }
+                    return transformedValue
+                }
+            } else {
+                throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: JSONArray.self, value: value, array: jsonArray, reason: .incorrectType)
+            }
+        }
+    }
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [[JSONRawType]]
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] {
+
+        return try decodeArray(atKeyPath: keyPath) { (keyPath, jsonArray, value) -> [T] in
+            if let array = value as? JSONArray {
+                return try array.map {
+                    try getValue(atKeyPath: keyPath, array: array, value: $0)
+                }
+            } else {
+                throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: JSONArray.self, value: value, array: jsonArray, reason: .incorrectType)
+            }
+        }
+    }
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [[JSONObjectConvertible]]
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] {
+
+        return try decodeArray(atKeyPath: keyPath) { (keyPath, jsonArray, value) -> [T] in
+            if let array = value as? JSONArray {
+                return try array.map {
+                    let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: array, value: $0)
+                    return try T(jsonDictionary: jsonDictionary)
+                }
+            } else {
+                throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: JSONArray.self, value: value, array: jsonArray, reason: .incorrectType)
+            }
+        }
+    }
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+}
 
 extension Dictionary where Key: JSONKey {
 
