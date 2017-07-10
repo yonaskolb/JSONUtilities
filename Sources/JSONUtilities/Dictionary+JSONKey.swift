@@ -278,6 +278,70 @@ extension Dictionary where Key: JSONKey {
         return try? json(atKeyPath: keyPath)
     }
 
+    // MARK: [String: [String: RawRepresentable]]
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] where T.RawValue: JSONRawType {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [String: T]] = [:]
+        for key in jsonDictionary.keys {
+            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = subDictionary
+        }
+        return dictionary
+    }
+
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? where T.RawValue: JSONRawType {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [String: JSONPrimitiveConvertible]]
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [String: T]] = [:]
+        for key in jsonDictionary.keys {
+            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = subDictionary
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [String: JSONObjectConvertible]]
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [String: T]] = [:]
+        for key in jsonDictionary.keys {
+            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = subDictionary
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
+    // MARK: [String: [String: JSONRawType]]
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
+        let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
+        var dictionary: [String: [String: T]] = [:]
+        for key in jsonDictionary.keys {
+            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+            dictionary[key] = subDictionary
+        }
+        return dictionary
+    }
+
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
+        return try? json(atKeyPath: keyPath)
+    }
+
     // MARK: [[RawRepresentable]]
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] where T.RawValue: JSONRawType {
