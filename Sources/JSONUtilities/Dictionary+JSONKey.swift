@@ -226,7 +226,7 @@ extension Dictionary where Key: JSONKey {
         return dictionary
     }
 
-    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? where T.RawValue: JSONRawType {
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? where T.RawValue: JSONRawType {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -242,7 +242,7 @@ extension Dictionary where Key: JSONKey {
         return dictionary
     }
 
-    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -258,7 +258,7 @@ extension Dictionary where Key: JSONKey {
         return dictionary
     }
 
-    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -274,7 +274,7 @@ extension Dictionary where Key: JSONKey {
         return dictionary
     }
 
-    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]]? {
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -296,7 +296,7 @@ extension Dictionary where Key: JSONKey {
         }
     }
 
-    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? where T.RawValue: JSONRawType {
+    public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? where T.RawValue: JSONRawType {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -319,7 +319,7 @@ extension Dictionary where Key: JSONKey {
         }
     }
 
-    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+    public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -338,7 +338,7 @@ extension Dictionary where Key: JSONKey {
         }
     }
 
-    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+    public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
         return try? json(atKeyPath: keyPath)
     }
 
@@ -358,7 +358,7 @@ extension Dictionary where Key: JSONKey {
         }
     }
 
-    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]]? {
+    public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
         return try? json(atKeyPath: keyPath)
     }
 }
