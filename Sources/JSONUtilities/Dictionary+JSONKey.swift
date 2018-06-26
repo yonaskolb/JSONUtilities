@@ -465,7 +465,7 @@ extension Dictionary where Key: JSONKey {
 
         var dictionary: [K: T] = [:]
         for (key, _) in jsonDictionary {
-            if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath(rawValue: key)) }) {
+            if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath.key(key)) }) {
                 dictionary[jsonKey] = item
             }
         }
