@@ -11,8 +11,8 @@ import XCTest
 
 class InvalidItemBehaviourTests: XCTestCase {
 
-    private let randomKey: KeyPath = "aaaaaaa"
-    private let key: KeyPath = "key"
+    private let randomKey: JSONUtilities.KeyPath = "aaaaaaa"
+    private let key: JSONUtilities.KeyPath = "key"
 
     let dictionaryString = [
         "key": [

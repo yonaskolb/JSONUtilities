@@ -3,3 +3,5 @@ excluded:
 disabled_rules:
   - line_length
   - redundant_discardable_let
+  - identifier_name
+  - file_length

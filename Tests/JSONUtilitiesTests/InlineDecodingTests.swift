@@ -9,7 +9,7 @@
 import XCTest
 @testable import JSONUtilities
 
-private let randomKey: KeyPath = "aaaaaaa"
+private let randomKey: JSONUtilities.KeyPath = "aaaaaaa"
 
 class InlineDecodingTests: XCTestCase {
 
@@ -175,7 +175,7 @@ class InlineDecodingTests: XCTestCase {
     // MARK: DecodingErrors
 
     func testDecodingErrorDescriptions() {
-        let failureReasons: [DecodingError.Reason] = [
+        let failureReasons: [JSONUtilities.DecodingError.Reason] = [
             .keyNotFound,
             .incorrectRawRepresentableRawValue,
             .incorrectType,
@@ -183,9 +183,9 @@ class InlineDecodingTests: XCTestCase {
         ]
         failureReasons.forEach {
             let error = DecodingError(dictionary: [:], keyPath: "", expectedType: String.self, value: "", array: nil, reason: $0)
-            XCTAssert(error.description.characters.count > 0)
-            XCTAssert(error.debugDescription.characters.count > 0)
-            XCTAssert(error.reason.description.characters.count > 0)
+            XCTAssert(error.description.count > 0)
+            XCTAssert(error.debugDescription.count > 0)
+            XCTAssert(error.reason.description.count > 0)
         }
     }
 
