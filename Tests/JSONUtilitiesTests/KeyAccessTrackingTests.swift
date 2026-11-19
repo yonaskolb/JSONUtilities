@@ -136,7 +136,7 @@ class KeyAccessTrackingTests: XCTestCase {
         XCTAssertNil(KeyAccessTracking.currentPath)
     }
 
-    func testConcurrentScopes() throws {
+    func testConcurrentScopesWithContext() throws {
         var items: JSONDictionary = [:]
         for index in 0..<50 {
             items["item\(index)"] = ["name": "item\(index)", "unknown\(index)": true]
@@ -145,25 +145,55 @@ class KeyAccessTrackingTests: XCTestCase {
 
         let (names, unusedKeys) = try KeyAccessTracking.record(root: dictionary) { () -> [String] in
             let itemsDictionary: JSONDictionary = try dictionary.json(atKeyPath: "items")
-            let basePath = KeyAccessTracking.currentPath ?? []
-            let keys = Array(itemsDictionary.keys)
-            let lock = NSLock()
-            var names: [String] = []
-            DispatchQueue.concurrentPerform(iterations: keys.count) { index in
-                let key = keys[index]
-                let itemDictionary = itemsDictionary[key] as! JSONDictionary
-                let child = try? KeyAccessTracking.scope(itemDictionary, path: basePath + ["items", key]) {
-                    try TrackedChild(jsonDictionary: itemDictionary)
+            return try KeyAccessTracking.scope(itemsDictionary, at: "items", allKeysRead: true) {
+                let context = KeyAccessTracking.currentContext
+                XCTAssertNotNil(context)
+                let keys = Array(itemsDictionary.keys)
+                let lock = NSLock()
+                var names: [String] = []
+                DispatchQueue.concurrentPerform(iterations: keys.count) { index in
+                    let key = keys[index]
+                    let child = try? KeyAccessTracking.withContext(context) {
+                        try itemsDictionary.json(atKeyPath: .key(key)) as TrackedChild
+                    }
+                    lock.lock()
+                    names.append(child?.name ?? "")
+                    lock.unlock()
                 }
-                lock.lock()
-                names.append(child?.name ?? "")
-                lock.unlock()
+                return names
             }
-            return names
         }
 
         XCTAssertEqual(names.count, 50)
         XCTAssertEqual(unusedKeys.count, 50)
         XCTAssertEqual(Set(unusedKeys.map { $0.description }), Set((0..<50).map { "items.item\($0).unknown\($0)" }))
+    }
+
+    func testSeparateRecordingsDontInterfere() {
+        let lock = NSLock()
+        var results: [Int: [String]] = [:]
+        DispatchQueue.concurrentPerform(iterations: 20) { index in
+            let dictionary: JSONDictionary = ["name": "parent", "unknown\(index)": true, "child": ["name": "child", "extra\(index)": 1]]
+            let (_, unusedKeys) = try! KeyAccessTracking.record(root: dictionary) {
+                try TrackedParent(jsonDictionary: dictionary)
+            }
+            lock.lock()
+            results[index] = unusedKeys.map { $0.description }
+            lock.unlock()
+        }
+        for index in 0..<20 {
+            XCTAssertEqual(results[index], ["child.extra\(index)", "unknown\(index)"])
+        }
+    }
+
+    func testNestedRecordingsAreSeparate() throws {
+        let outer: JSONDictionary = ["name": "outer", "outerUnknown": 1]
+        let inner: JSONDictionary = ["name": "inner", "innerUnknown": 1]
+        let (innerKeys, outerKeys) = try KeyAccessTracking.record(root: outer) { () -> [UnusedKey] in
+            _ = try TrackedParent(jsonDictionary: outer)
+            return try KeyAccessTracking.record(root: inner) { try TrackedParent(jsonDictionary: inner) }.1
+        }
+        XCTAssertEqual(innerKeys.map { $0.description }, ["innerUnknown"])
+        XCTAssertEqual(outerKeys.map { $0.description }, ["outerUnknown"])
     }
 }

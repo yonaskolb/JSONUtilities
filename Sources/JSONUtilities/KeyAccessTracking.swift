@@ -6,7 +6,7 @@
 import Foundation
 
 /// A key that was present in a decoded JSON object but never read while decoding it.
-public struct UnusedKey: Equatable, Hashable, CustomStringConvertible {
+public struct UnusedKey: Equatable, Hashable, Sendable, CustomStringConvertible {
 
     /// The path to the object that contains the key, e.g. `["targets", "App"]` or `["sources[1]"]`
     public let path: [String]
@@ -33,8 +33,9 @@ public struct UnusedKey: Equatable, Hashable, CustomStringConvertible {
 /// Each key read through `json(atKeyPath:)` is marked as read in the innermost scope. When a scope finishes decoding
 /// successfully, the keys of its dictionary that were never read are reported as `UnusedKey`s.
 ///
-/// Scopes are kept per thread, so decoding on several threads at once is supported.
-/// A scope started on a thread with no current scope (for example a worker thread) uses the path passed to it.
+/// The current scope is a task local value, so separate recordings never interfere with each other, and child tasks
+/// continue the recording of their parent. Threads that aren't child tasks, like those of
+/// `DispatchQueue.concurrentPerform`, don't inherit it: capture `currentContext` and continue it with `withContext`.
 public enum KeyAccessTracking {
 
     // MARK: Public API
@@ -47,34 +48,36 @@ public enum KeyAccessTracking {
     /// - Returns: The result of `body`, and the unused keys sorted by their description.
     public static func record<R>(root: JSONDictionary? = nil, _ body: () throws -> R) rethrows -> (R, [UnusedKey]) {
         let session = Session()
-
-        let previousSession = currentSession
-        let previousScopes = scopes
-        currentSession = session
-        scopes = []
-        defer {
-            currentSession = previousSession
-            scopes = previousScopes
-        }
-
-        let result: R
-        if let root = root {
-            result = try scope(root, path: [], body)
-        } else {
-            result = try body()
-        }
+        let rootScope = Scope(session: session, path: [], dictionary: root ?? [:], allKeysRead: root == nil)
+        let result = try $current.withValue(rootScope, operation: body)
+        rootScope.reportUnusedKeys()
         return (result, session.unusedKeys)
     }
 
     /// Whether key reads are currently being recorded
     public static var isRecording: Bool {
-        return currentSession != nil
+        return current != nil
     }
 
-    /// The path of the innermost scope on the current thread, or nil if there is none.
-    /// Capture this before handing work to other threads, and pass it to `scope(_:path:_:)` there.
+    /// The path of the current scope, or nil when not recording
     public static var currentPath: [String]? {
-        return scopes.last?.path
+        return current?.path
+    }
+
+    /// A handle to the current scope, for continuing the recording on threads that don't inherit it
+    public struct Context: @unchecked Sendable {
+        fileprivate let scope: Scope
+    }
+
+    /// The current scope, or nil when not recording. Pass it to `withContext` on another thread.
+    public static var currentContext: Context? {
+        return current.map(Context.init)
+    }
+
+    /// Runs `body` in the given context, so that its decoding is recorded as part of that context's scope.
+    public static func withContext<R>(_ context: Context?, _ body: () throws -> R) rethrows -> R {
+        guard let context = context else { return try body() }
+        return try $current.withValue(context.scope, operation: body)
     }
 
     /// Decodes a nested object in its own scope, with a path relative to the current scope.
@@ -85,21 +88,10 @@ public enum KeyAccessTracking {
     ///   - component: The path component of this object, e.g. a key or `sources[1]`
     ///   - allKeysRead: Pass true when the keys of this dictionary are data rather than known keys
     public static func scope<R>(_ dictionary: JSONDictionary, at component: String, allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
-        guard isRecording else { return try body() }
-        let path = (currentPath ?? []) + [component]
-        return try scope(dictionary, path: path, allKeysRead: allKeysRead, body)
-    }
+        guard let parent = current else { return try body() }
 
-    /// Decodes a nested object in its own scope, with an absolute path.
-    public static func scope<R>(_ dictionary: JSONDictionary, path: [String], allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
-        guard let session = currentSession else { return try body() }
-
-        let scope = Scope(dictionary: dictionary, path: path, session: session)
-        scope.allKeysRead = allKeysRead
-        scopes.append(scope)
-        defer { scopes.removeLast() }
-
-        let result = try body()
+        let scope = Scope(session: parent.session, path: parent.path + [component], dictionary: dictionary, allKeysRead: allKeysRead)
+        let result = try $current.withValue(scope, operation: body)
         scope.reportUnusedKeys()
         return result
     }
@@ -107,32 +99,32 @@ public enum KeyAccessTracking {
     /// Marks keys of the current scope as read. Use this for keys read without `json(atKeyPath:)`,
     /// for example `jsonDictionary["key"]`, or keys consumed before decoding.
     public static func markRead(_ keys: String...) {
-        markRead(keys)
+        current?.markRead(keys)
     }
 
     /// Marks keys of the current scope as read.
     public static func markRead<S: Sequence>(_ keys: S) where S.Element == String {
-        guard let scope = scopes.last else { return }
-        scope.readKeys.formUnion(keys)
+        current?.markRead(keys)
     }
 
     /// Marks every key of the current scope as read.
     /// Use this when the keys of the object being decoded are data, for example a dictionary of settings.
     public static func markAllRead() {
-        scopes.last?.allKeysRead = true
+        current?.markAllRead()
     }
 
     // MARK: Internal
 
     /// Called by `Dictionary.subscript(keyPath:)` for every top level key read
     static func didRead(_ key: String) {
-        guard let scope = scopes.last else { return }
-        scope.readKeys.insert(key)
+        current?.markRead(CollectionOfOne(key))
     }
 
     // MARK: Private
 
-    private final class Session {
+    @TaskLocal private static var current: Scope?
+
+    fileprivate final class Session: @unchecked Sendable {
         private let lock = NSLock()
         private var keys: [UnusedKey] = []
 
@@ -149,57 +141,42 @@ public enum KeyAccessTracking {
         }
     }
 
-    private final class Scope {
-        let dictionary: JSONDictionary
-        let path: [String]
+    // Reads can come from several threads at once when a context is shared, so state is behind a lock
+    fileprivate final class Scope: @unchecked Sendable {
         let session: Session
-        var readKeys: Set<String> = []
-        var allKeysRead = false
+        let path: [String]
+        private let dictionary: JSONDictionary
+        private let lock = NSLock()
+        private var readKeys: Set<String> = []
+        private var allKeysRead: Bool
 
-        init(dictionary: JSONDictionary, path: [String], session: Session) {
-            self.dictionary = dictionary
-            self.path = path
+        init(session: Session, path: [String], dictionary: JSONDictionary, allKeysRead: Bool) {
             self.session = session
+            self.path = path
+            self.dictionary = dictionary
+            self.allKeysRead = allKeysRead
+        }
+
+        func markRead<S: Sequence>(_ keys: S) where S.Element == String {
+            lock.lock()
+            readKeys.formUnion(keys)
+            lock.unlock()
+        }
+
+        func markAllRead() {
+            lock.lock()
+            allKeysRead = true
+            lock.unlock()
         }
 
         func reportUnusedKeys() {
-            guard !allKeysRead else { return }
-            let unused = dictionary.keys
+            lock.lock()
+            let unused = allKeysRead ? [] : dictionary.keys
                 .filter { !readKeys.contains($0) }
                 .map { UnusedKey(path: path, key: $0) }
+            lock.unlock()
             if !unused.isEmpty {
                 session.add(unused)
-            }
-        }
-    }
-
-    private static let sessionLock = NSLock()
-    private static var _currentSession: Session?
-
-    private static var currentSession: Session? {
-        get {
-            sessionLock.lock()
-            defer { sessionLock.unlock() }
-            return _currentSession
-        }
-        set {
-            sessionLock.lock()
-            _currentSession = newValue
-            sessionLock.unlock()
-        }
-    }
-
-    private static let scopesKey = "JSONUtilities.KeyAccessTracking.scopes"
-
-    private static var scopes: [Scope] {
-        get {
-            return Thread.current.threadDictionary[scopesKey] as? [Scope] ?? []
-        }
-        set {
-            if newValue.isEmpty {
-                Thread.current.threadDictionary.removeObject(forKey: scopesKey)
-            } else {
-                Thread.current.threadDictionary[scopesKey] = newValue
             }
         }
     }

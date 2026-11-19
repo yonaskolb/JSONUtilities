@@ -238,5 +238,5 @@ Every `JSONObjectConvertible` decoded with `json(atKeyPath:)` gets its own scope
 - `KeyAccessTracking.markRead("key")` marks keys you read some other way, like `jsonDictionary["key"]`.
 - `KeyAccessTracking.markAllRead()` marks every key of the current object as read, for objects whose keys are data.
 - `KeyAccessTracking.scope(dictionary, at: "key") { ... }` gives an object you decode yourself its own scope.
-- Scopes are tracked per thread. When decoding on other threads, capture `KeyAccessTracking.currentPath` first and pass the full path with `scope(_:path:_:)`.
+- The current scope is a task local, so separate recordings never mix and child tasks continue their parent's recording. Threads that don't inherit task locals, like `DispatchQueue.concurrentPerform`, can continue it by capturing `KeyAccessTracking.currentContext` and running their decoding inside `KeyAccessTracking.withContext(context) { ... }`.
 
