@@ -10,6 +10,6 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(name: "JSONUtilities"),
-        .testTarget(name: "JSONUtilitiesTests")
+        .testTarget(name: "JSONUtilitiesTests", dependencies: ["JSONUtilities"])
     ]
 )
