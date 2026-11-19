@@ -38,7 +38,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath) -> T? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [JSONRawType]
@@ -48,7 +48,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: Any]
@@ -68,7 +68,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<JSONDictionary> = .remove) -> [JSONDictionary]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [JSONDictionary]
     }
 
     // MARK: [String: JSONObjectConvertible]
@@ -134,7 +134,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: RawRepresentable
@@ -150,7 +150,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath) -> T? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [RawRepresentable]
@@ -168,7 +168,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: RawRepresentable]
@@ -185,7 +185,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [K: T]
     }
 
     // MARK: JSONPrimitiveConvertible
@@ -201,7 +201,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath) -> T? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [JSONPrimitiveConvertible]
@@ -218,7 +218,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: [RawRepresentable]]
@@ -237,7 +237,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONPrimitiveConvertible]]
@@ -256,7 +256,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONObjectConvertible]]
@@ -275,7 +275,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONRawType]]
@@ -294,7 +294,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [String: RawRepresentable]]
@@ -313,7 +313,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONPrimitiveConvertible]]
@@ -332,7 +332,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONObjectConvertible]]
@@ -351,7 +351,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONRawType]]
@@ -370,7 +370,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [[RawRepresentable]]
@@ -392,7 +392,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONPrimitiveConvertible]]
@@ -415,7 +415,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONRawType]]
@@ -434,7 +434,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONObjectConvertible]]
@@ -458,7 +458,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 }
 
