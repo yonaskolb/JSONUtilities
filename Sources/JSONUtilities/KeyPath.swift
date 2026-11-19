@@ -34,6 +34,14 @@ public enum KeyPath: JSONKey {
         }
     }
 
+    /// The first key of the key path, which is the key read on the dictionary itself
+    var firstKey: String {
+        switch self {
+        case let .key(key): return key
+        case let .keyPath(keys): return keys.first ?? ""
+        }
+    }
+
     func getValue(dictionary: JSONDictionary) -> Any? {
 
         switch self {
