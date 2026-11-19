@@ -2,6 +2,7 @@
 
 ## Next Version
 
+- Added `KeyAccessTracking` to report keys that were never read while decoding, with their paths
 - Updated to Swift tools version 5.9, with minimum platforms of macOS 10.15, iOS 13, tvOS 13 and watchOS 6
 - `URL` decoding rejects invalid URL strings again on macOS 14, iOS 17 and later, where `URL(string:)` started percent-encoding them
 - `DecodingError` is now `Sendable`
