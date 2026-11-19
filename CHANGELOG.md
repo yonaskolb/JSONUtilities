@@ -1,5 +1,12 @@
 # Change Log
 
+## Next Version
+
+- Updated to Swift tools version 5.9, with minimum platforms of macOS 10.15, iOS 13, tvOS 13 and watchOS 6
+- `URL` decoding rejects invalid URL strings again on macOS 14, iOS 17 and later, where `URL(string:)` started percent-encoding them
+- `DecodingError` is now `Sendable`
+- Replaced Travis CI with GitHub Actions on macOS and Linux
+
 ## 4.0.0
 
 - Decoded typed dictionaries now filter out invalid objects by default instead of failing the whole response. This aligns with the defaults of how arrays are decoded.

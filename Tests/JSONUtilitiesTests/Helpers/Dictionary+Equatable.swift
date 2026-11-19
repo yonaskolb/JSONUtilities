@@ -8,24 +8,30 @@
 
 import Foundation
 
+// Compares JSON values by their serialized form, so that the result doesn't depend on how each platform's
+// Foundation bridges numbers and booleans (NSDictionary.isEqual differs between Darwin and Linux)
+private func jsonEqual(_ lhs: Any, _ rhs: Any) -> Bool {
+    guard let lhsData = try? JSONSerialization.data(withJSONObject: lhs, options: .sortedKeys),
+        let rhsData = try? JSONSerialization.data(withJSONObject: rhs, options: .sortedKeys) else {
+        return false
+    }
+    return lhsData == rhsData
+}
+
 public func == (lhs: [String: Any], rhs: [String: Any]) -> Bool {
-    return NSDictionary(dictionary: lhs).isEqual(to: rhs)
+    return jsonEqual(lhs, rhs)
 }
 
 public func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
     guard let lhs = lhs, let rhs = rhs else { return false }
-    return NSDictionary(dictionary: lhs).isEqual(to: rhs)
+    return jsonEqual(lhs, rhs)
 }
 
 public func == (lhs: [[String: Any]], rhs: [[String: Any]]) -> Bool {
-    let lhsArray = NSArray(array: lhs)
-    let rhsArray = NSArray(array: rhs)
-    return lhsArray.isEqual(to: rhsArray as [AnyObject])
+    return jsonEqual(lhs, rhs)
 }
 
 public func == (lhs: [[String: Any]]?, rhs: [[String: Any]]?) -> Bool {
     guard let lhs = lhs, let rhs = rhs else { return false }
-    let lhsArray = NSArray(array: lhs)
-    let rhsArray = NSArray(array: rhs)
-    return lhsArray.isEqual(to: rhsArray as [AnyObject])
+    return jsonEqual(lhs, rhs)
 }
