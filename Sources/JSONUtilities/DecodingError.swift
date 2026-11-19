@@ -81,3 +81,6 @@ public struct DecodingError: Error, CustomStringConvertible, CustomDebugStringCo
         }
     }
 }
+
+// The dictionary, array and values of an error are plain JSON values, which are never mutated.
+extension DecodingError: @unchecked Sendable {}

@@ -1,11 +1,10 @@
 # JSONUtilities
 
-[![Build Status](https://travis-ci.org/lucianomarisi/JSONUtilities.svg?branch=master)](https://travis-ci.org/lucianomarisi/JSONUtilities)
+[![CI](https://github.com/yonaskolb/JSONUtilities/actions/workflows/ci.yml/badge.svg)](https://github.com/yonaskolb/JSONUtilities/actions/workflows/ci.yml)
 [![](https://img.shields.io/cocoapods/v/JSONUtilities.svg)](https://cocoapods.org/pods/JSONUtilities)
 [![](https://img.shields.io/cocoapods/p/JSONUtilities.svg)](https://cocoapods.org/pods/JSONUtilities)
-[![codecov.io](http://codecov.io/github/lucianomarisi/JSONUtilities/coverage.svg?branch=master)](http://codecov.io/github/lucianomarisi/JSONUtilities?branch=master)
 ![Carthage Compatible](https://img.shields.io/badge/carthage-compatible-4BC51D.svg?style=flat)
-![Swift Version](https://img.shields.io/badge/swift-3.0-brightgreen.svg)
+![Swift Version](https://img.shields.io/badge/swift-5.9-brightgreen.svg)
 
 Easily load JSON objects and decode them into structs or classes. The `json(atKeyPath:)` function infers the type from the constant or variable definition to decode meaning no casting is needed. Both string keys and keypaths (keys separated by dots `.`) are supported when decoding JSON.
 
@@ -27,7 +26,7 @@ Add the files inside the `Sources` folder into your Xcode project.
 
 **Swift Package Manager:**
 
-Add the line `.Package(url: "https://github.com/lucianomarisi/JSONUtilities", majorVersion: 3)` to your `Package.swift`.
+Add the line `.package(url: "https://github.com/yonaskolb/JSONUtilities.git", from: "4.2.0")` to the dependencies in your `Package.swift`.
 
 ## Types supported
 
