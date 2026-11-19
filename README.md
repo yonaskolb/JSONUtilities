@@ -1,11 +1,10 @@
 # JSONUtilities
 
-[![Build Status](https://travis-ci.org/lucianomarisi/JSONUtilities.svg?branch=master)](https://travis-ci.org/lucianomarisi/JSONUtilities)
+[![CI](https://github.com/yonaskolb/JSONUtilities/actions/workflows/ci.yml/badge.svg)](https://github.com/yonaskolb/JSONUtilities/actions/workflows/ci.yml)
 [![](https://img.shields.io/cocoapods/v/JSONUtilities.svg)](https://cocoapods.org/pods/JSONUtilities)
 [![](https://img.shields.io/cocoapods/p/JSONUtilities.svg)](https://cocoapods.org/pods/JSONUtilities)
-[![codecov.io](http://codecov.io/github/lucianomarisi/JSONUtilities/coverage.svg?branch=master)](http://codecov.io/github/lucianomarisi/JSONUtilities?branch=master)
 ![Carthage Compatible](https://img.shields.io/badge/carthage-compatible-4BC51D.svg?style=flat)
-![Swift Version](https://img.shields.io/badge/swift-3.0-brightgreen.svg)
+![Swift Version](https://img.shields.io/badge/swift-5.9-brightgreen.svg)
 
 Easily load JSON objects and decode them into structs or classes. The `json(atKeyPath:)` function infers the type from the constant or variable definition to decode meaning no casting is needed. Both string keys and keypaths (keys separated by dots `.`) are supported when decoding JSON.
 
@@ -27,7 +26,7 @@ Add the files inside the `Sources` folder into your Xcode project.
 
 **Swift Package Manager:**
 
-Add the line `.Package(url: "https://github.com/lucianomarisi/JSONUtilities", majorVersion: 3)` to your `Package.swift`.
+Add the line `.package(url: "https://github.com/yonaskolb/JSONUtilities.git", from: "4.2.0")` to the dependencies in your `Package.swift`.
 
 ## Types supported
 
@@ -220,3 +219,24 @@ It's also possible to have an array of `JSONPrimitiveConvertible` values, for ex
 let urlsDictionary = ["urls": ["www.google.com", "www.yahoo.com"]]
 let urls: [URL] = try! urlsDictionary.json(atKeyPath: "urls") // [www.google.com, www.yahoo.com]
 ```
+
+## Unused key tracking
+
+`KeyAccessTracking` can report keys that were present in your JSON but never read while decoding it, which is useful for warning about typos or unsupported keys. It's opt-in and does nothing unless you decode inside `KeyAccessTracking.record`.
+
+```swift
+let json: JSONDictionary = ["name": "App", "child": ["name": "Child", "nmae": "typo"], "extra": 1]
+
+let (parent, unusedKeys) = try KeyAccessTracking.record(root: json) {
+    try Parent(jsonDictionary: json)
+}
+unusedKeys.map { $0.description } // ["child.nmae", "extra"]
+```
+
+Every `JSONObjectConvertible` decoded with `json(atKeyPath:)` gets its own scope, and unused keys are reported with their path, including array indexes like `children[1].key`. Keys are marked as read when they are accessed with `json(atKeyPath:)`, whether or not they decode successfully.
+
+- `KeyAccessTracking.markRead("key")` marks keys you read some other way, like `jsonDictionary["key"]`.
+- `KeyAccessTracking.markAllRead()` marks every key of the current object as read, for objects whose keys are data.
+- `KeyAccessTracking.scope(dictionary, at: "key") { ... }` gives an object you decode yourself its own scope.
+- The current scope is a task local, so separate recordings never mix and child tasks continue their parent's recording. Threads that don't inherit task locals, like `DispatchQueue.concurrentPerform`, can continue it by capturing `KeyAccessTracking.currentContext` and running their decoding inside `KeyAccessTracking.withContext(context) { ... }`.
+

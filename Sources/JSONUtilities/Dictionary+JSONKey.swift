@@ -38,7 +38,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath) -> T? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [JSONRawType]
@@ -48,7 +48,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: Any]
@@ -68,7 +68,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<JSONDictionary> = .remove) -> [JSONDictionary]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [JSONDictionary]
     }
 
     // MARK: [String: JSONObjectConvertible]
@@ -110,24 +110,31 @@ extension Dictionary where Key: JSONKey {
     // MARK: JSONObjectConvertible
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath) throws -> T {
-        return try T(jsonDictionary: JSONDictionaryForKey(atKeyPath: keyPath))
+        let jsonDictionary = try JSONDictionaryForKey(atKeyPath: keyPath)
+        return try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key) {
+            try T(jsonDictionary: jsonDictionary)
+        }
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath) -> T? {
-        return try? T(jsonDictionary: JSONDictionaryForKey(atKeyPath: keyPath))
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [JSONObjectConvertible]
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [T] {
+        var index = -1
         return try decodeArray(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { keyPath, jsonArray, value in
+            index += 1
             let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: jsonArray, value: value)
-            return try T(jsonDictionary: jsonDictionary)
+            return try KeyAccessTracking.scope(jsonDictionary, at: "\(keyPath.key)[\(index)]") {
+                try T(jsonDictionary: jsonDictionary)
+            }
         }
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: RawRepresentable
@@ -143,7 +150,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath) -> T? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [RawRepresentable]
@@ -161,7 +168,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: RawRepresentable]
@@ -178,7 +185,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable, K: JSONKey>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [K: T]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [K: T]
     }
 
     // MARK: JSONPrimitiveConvertible
@@ -194,7 +201,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath) -> T? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as T
     }
 
     // MARK: [JSONPrimitiveConvertible]
@@ -211,7 +218,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [T]? {
-        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour)
+        return try? json(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) as [T]
     }
 
     // MARK: [String: [RawRepresentable]]
@@ -219,15 +226,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] where T.RawValue: JSONRawType {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
-        for key in jsonDictionary.keys {
-            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = array
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = array
+            }
         }
         return dictionary
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONPrimitiveConvertible]]
@@ -235,15 +245,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
-        for key in jsonDictionary.keys {
-            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = array
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = array
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONObjectConvertible]]
@@ -251,15 +264,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
-        for key in jsonDictionary.keys {
-            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = array
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = array
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [JSONRawType]]
@@ -267,15 +283,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
-        for key in jsonDictionary.keys {
-            let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = array
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = array
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [T]]
     }
 
     // MARK: [String: [String: RawRepresentable]]
@@ -283,15 +302,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] where T.RawValue: JSONRawType {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
-        for key in jsonDictionary.keys {
-            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = subDictionary
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = subDictionary
+            }
         }
         return dictionary
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONPrimitiveConvertible]]
@@ -299,15 +321,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
-        for key in jsonDictionary.keys {
-            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = subDictionary
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = subDictionary
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONObjectConvertible]]
@@ -315,15 +340,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
-        for key in jsonDictionary.keys {
-            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = subDictionary
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = subDictionary
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [String: [String: JSONRawType]]
@@ -331,15 +359,18 @@ extension Dictionary where Key: JSONKey {
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [String: [String: T]] {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
-        for key in jsonDictionary.keys {
-            let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
-            dictionary[key] = subDictionary
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for key in jsonDictionary.keys {
+                let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
+                dictionary[key] = subDictionary
+            }
         }
         return dictionary
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [String: [String: T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [String: [String: T]]
     }
 
     // MARK: [[RawRepresentable]]
@@ -361,7 +392,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: RawRepresentable>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? where T.RawValue: JSONRawType {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONPrimitiveConvertible]]
@@ -384,7 +415,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONPrimitiveConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONRawType]]
@@ -403,18 +434,22 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONRawType>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 
     // MARK: [[JSONObjectConvertible]]
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) throws -> [[T]] {
 
+        var outerIndex = -1
         return try decodeArray(atKeyPath: keyPath) { (keyPath, jsonArray, value) -> [T] in
+            outerIndex += 1
             if let array = value as? JSONArray {
-                return try array.map {
-                    let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: array, value: $0)
-                    return try T(jsonDictionary: jsonDictionary)
+                return try array.enumerated().map { innerIndex, item in
+                    let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: array, value: item)
+                    return try KeyAccessTracking.scope(jsonDictionary, at: "\(keyPath.key)[\(outerIndex)][\(innerIndex)]") {
+                        try T(jsonDictionary: jsonDictionary)
+                    }
                 }
             } else {
                 throw DecodingError(dictionary: self, keyPath: keyPath, expectedType: JSONArray.self, value: value, array: jsonArray, reason: .incorrectType)
@@ -423,7 +458,7 @@ extension Dictionary where Key: JSONKey {
     }
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath, invalidItemBehaviour: InvalidItemBehaviour<T> = .remove) -> [[T]]? {
-        return try? json(atKeyPath: keyPath)
+        return try? json(atKeyPath: keyPath) as [[T]]
     }
 }
 
@@ -464,9 +499,12 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
 
         var dictionary: [K: T] = [:]
-        for (key, _) in jsonDictionary {
-            if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath.key(key)) }) {
-                dictionary[jsonKey] = item
+        // the keys of this dictionary are data, so give it a scope with all keys read
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+            for (key, _) in jsonDictionary {
+                if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath.key(key)) }) {
+                    dictionary[jsonKey] = item
+                }
             }
         }
 
