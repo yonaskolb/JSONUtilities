@@ -3,10 +3,14 @@ on:
   push:
     branches: [master]
   pull_request: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   macos:
     runs-on: macos-15
     name: macOS
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Build
