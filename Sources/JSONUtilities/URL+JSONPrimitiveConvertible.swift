@@ -18,6 +18,17 @@ extension URL: JSONPrimitiveConvertible {
     ///
     /// - returns: Returns a URL if the input string was successfully converted to a URL
     public static func from(jsonValue: String) -> URL? {
+        // Since macOS 14, iOS 17 and Swift 6 on Linux, URL(string:) percent-encodes invalid characters instead of failing.
+        // Keep rejecting invalid URL strings, as on older systems.
+        #if canImport(Darwin)
+        if #available(macOS 14, iOS 17, tvOS 17, watchOS 10, *) {
+            return URL(string: jsonValue, encodingInvalidCharacters: false)
+        }
         return URL(string: jsonValue)
+        #elseif compiler(>=6.0)
+        return URL(string: jsonValue, encodingInvalidCharacters: false)
+        #else
+        return URL(string: jsonValue)
+        #endif
     }
 }

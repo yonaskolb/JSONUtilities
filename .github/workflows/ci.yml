@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  macos:
+    runs-on: macos-15
+    name: macOS
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+  linux:
+    runs-on: ubuntu-latest
+    name: Linux (Swift ${{ matrix.swift }})
+    strategy:
+      matrix:
+        swift: ["5.10", "6.1"]
+    container: swift:${{ matrix.swift }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test

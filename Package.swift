@@ -1,15 +1,20 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.9
 
 import PackageDescription
 
 let package = Package(
     name: "JSONUtilities",
-    products: [
-        .library(name: "JSONUtilities", targets: ["JSONUtilities"])
+    platforms: [
+        .macOS(.v10_15),
+        .iOS(.v13),
+        .tvOS(.v13),
+        .watchOS(.v6),
     ],
-    dependencies: [],
+    products: [
+        .library(name: "JSONUtilities", targets: ["JSONUtilities"]),
+    ],
     targets: [
         .target(name: "JSONUtilities"),
-        .testTarget(name: "JSONUtilitiesTests")
+        .testTarget(name: "JSONUtilitiesTests", dependencies: ["JSONUtilities"]),
     ]
 )
