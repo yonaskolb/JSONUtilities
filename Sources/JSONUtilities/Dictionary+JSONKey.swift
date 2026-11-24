@@ -111,7 +111,7 @@ extension Dictionary where Key: JSONKey {
 
     public func json<T: JSONObjectConvertible>(atKeyPath keyPath: KeyPath) throws -> T {
         let jsonDictionary = try JSONDictionaryForKey(atKeyPath: keyPath)
-        return try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key) {
+        return try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents) {
             try T(jsonDictionary: jsonDictionary)
         }
     }
@@ -127,7 +127,7 @@ extension Dictionary where Key: JSONKey {
         return try decodeArray(atKeyPath: keyPath, invalidItemBehaviour: invalidItemBehaviour) { keyPath, jsonArray, value in
             index += 1
             let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: jsonArray, value: value)
-            return try KeyAccessTracking.scope(jsonDictionary, at: "\(keyPath.key)[\(index)]") {
+            return try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents + [.index(index)]) {
                 try T(jsonDictionary: jsonDictionary)
             }
         }
@@ -227,7 +227,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = array
@@ -246,7 +246,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = array
@@ -265,7 +265,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = array
@@ -284,7 +284,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let array: [T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = array
@@ -303,7 +303,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = subDictionary
@@ -322,7 +322,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = subDictionary
@@ -341,7 +341,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = subDictionary
@@ -360,7 +360,7 @@ extension Dictionary where Key: JSONKey {
         let jsonDictionary: JSONDictionary = try json(atKeyPath: keyPath)
         var dictionary: [String: [String: T]] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for key in jsonDictionary.keys {
                 let subDictionary: [String: T] = try jsonDictionary.json(atKeyPath: .key(key), invalidItemBehaviour: invalidItemBehaviour)
                 dictionary[key] = subDictionary
@@ -447,7 +447,7 @@ extension Dictionary where Key: JSONKey {
             if let array = value as? JSONArray {
                 return try array.enumerated().map { innerIndex, item in
                     let jsonDictionary: JSONDictionary = try getValue(atKeyPath: keyPath, array: array, value: item)
-                    return try KeyAccessTracking.scope(jsonDictionary, at: "\(keyPath.key)[\(outerIndex)][\(innerIndex)]") {
+                    return try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents + [.index(outerIndex), .index(innerIndex)]) {
                         try T(jsonDictionary: jsonDictionary)
                     }
                 }
@@ -500,7 +500,7 @@ extension Dictionary where Key: JSONKey {
 
         var dictionary: [K: T] = [:]
         // the keys of this dictionary are data, so give it a scope with all keys read
-        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.key, allKeysRead: true) { () throws -> Void in
+        try KeyAccessTracking.scope(jsonDictionary, at: keyPath.pathComponents, allKeysRead: true) { () throws -> Void in
             for (key, _) in jsonDictionary {
                 if let jsonKey = K(rawValue: key), let item = try invalidItemBehaviour.decodeItem(decode: { try decode(jsonDictionary, KeyPath.key(key)) }) {
                     dictionary[jsonKey] = item

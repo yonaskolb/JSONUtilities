@@ -5,23 +5,75 @@
 
 import Foundation
 
-/// A key that was present in a decoded JSON object but never read while decoding it.
-public struct UnusedKey: Equatable, Hashable, Sendable, CustomStringConvertible {
+/// One step in the path to a JSON value: a dictionary key, or an array index
+public enum JSONPathComponent: Hashable, Comparable, Sendable, CustomStringConvertible, ExpressibleByStringLiteral, ExpressibleByIntegerLiteral {
+    case key(String)
+    case index(Int)
 
-    /// The path to the object that contains the key, e.g. `["targets", "App"]` or `["sources[1]"]`
-    public let path: [String]
+    public init(stringLiteral value: String) {
+        self = .key(value)
+    }
+
+    public init(integerLiteral value: Int) {
+        self = .index(value)
+    }
+
+    /// `key` for a key, or `[index]` for an index
+    public var description: String {
+        switch self {
+        case let .key(key): return key
+        case let .index(index): return "[\(index)]"
+        }
+    }
+
+    /// Keys sort before indexes, keys sort alphabetically and indexes numerically
+    public static func < (lhs: JSONPathComponent, rhs: JSONPathComponent) -> Bool {
+        switch (lhs, rhs) {
+        case let (.key(lhs), .key(rhs)): return lhs < rhs
+        case let (.index(lhs), .index(rhs)): return lhs < rhs
+        case (.key, .index): return true
+        case (.index, .key): return false
+        }
+    }
+
+    /// Formats a path like `targets.App.sources[1]`
+    public static func format(_ path: [JSONPathComponent]) -> String {
+        var string = ""
+        for component in path {
+            switch component {
+            case let .key(key):
+                if !string.isEmpty { string += "." }
+                string += key
+            case .index:
+                string += component.description
+            }
+        }
+        return string
+    }
+}
+
+/// A key that was present in a decoded JSON object but never read while decoding it.
+public struct UnusedKey: Hashable, Comparable, Sendable, CustomStringConvertible {
+
+    /// The path to the object that contains the key, e.g. `[.key("targets"), .key("App")]` or `[.key("sources"), .index(1)]`
+    public let path: [JSONPathComponent]
 
     /// The unused key itself
     public let key: String
 
-    public init(path: [String], key: String) {
+    public init(path: [JSONPathComponent], key: String) {
         self.path = path
         self.key = key
     }
 
-    /// The full path to the key, joined with `.`, e.g. `targets.App.resources`
+    /// The full path to the key, e.g. `targets.App.resources` or `sources[1].buildphase`
     public var description: String {
-        return (path + [key]).joined(separator: ".")
+        return JSONPathComponent.format(path + [.key(key)])
+    }
+
+    /// Sorts by path, with array indexes in numeric order
+    public static func < (lhs: UnusedKey, rhs: UnusedKey) -> Bool {
+        return (lhs.path + [.key(lhs.key)]).lexicographicallyPrecedes(rhs.path + [.key(rhs.key)])
     }
 }
 
@@ -45,7 +97,7 @@ public enum KeyAccessTracking {
     /// - Parameters:
     ///   - root: An optional root dictionary to track. Its unused keys are reported with an empty path.
     ///   - body: The decoding to perform.
-    /// - Returns: The result of `body`, and the unused keys sorted by their description.
+    /// - Returns: The result of `body`, and the unused keys sorted by path.
     public static func record<R>(root: JSONDictionary? = nil, _ body: () throws -> R) rethrows -> (R, [UnusedKey]) {
         let session = Session()
         let rootScope = Scope(session: session, path: [], dictionary: root ?? [:], allKeysRead: root == nil)
@@ -60,7 +112,7 @@ public enum KeyAccessTracking {
     }
 
     /// The path of the current scope, or nil when not recording
-    public static var currentPath: [String]? {
+    public static var currentPath: [JSONPathComponent]? {
         return current?.path
     }
 
@@ -85,12 +137,17 @@ public enum KeyAccessTracking {
     ///
     /// - Parameters:
     ///   - dictionary: The dictionary being decoded
-    ///   - component: The path component of this object, e.g. a key or `sources[1]`
+    ///   - path: The path of this object relative to the current scope, e.g. `"settings"` or `"sources", .index(1)`
     ///   - allKeysRead: Pass true when the keys of this dictionary are data rather than known keys
-    public static func scope<R>(_ dictionary: JSONDictionary, at component: String, allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
+    public static func scope<R>(_ dictionary: JSONDictionary, at path: JSONPathComponent..., allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
+        return try scope(dictionary, at: path, allKeysRead: allKeysRead, body)
+    }
+
+    /// Decodes a nested object in its own scope, with a path relative to the current scope.
+    public static func scope<R>(_ dictionary: JSONDictionary, at path: [JSONPathComponent], allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
         guard let parent = current else { return try body() }
 
-        let scope = Scope(session: parent.session, path: parent.path + [component], dictionary: dictionary, allKeysRead: allKeysRead)
+        let scope = Scope(session: parent.session, path: parent.path + path, dictionary: dictionary, allKeysRead: allKeysRead)
         let result = try $current.withValue(scope, operation: body)
         scope.reportUnusedKeys()
         return result
@@ -137,20 +194,20 @@ public enum KeyAccessTracking {
         var unusedKeys: [UnusedKey] {
             lock.lock()
             defer { lock.unlock() }
-            return keys.sorted { $0.description < $1.description }
+            return keys.sorted()
         }
     }
 
     // Reads can come from several threads at once when a context is shared, so state is behind a lock
     fileprivate final class Scope: @unchecked Sendable {
         let session: Session
-        let path: [String]
+        let path: [JSONPathComponent]
         private let dictionary: JSONDictionary
         private let lock = NSLock()
         private var readKeys: Set<String> = []
         private var allKeysRead: Bool
 
-        init(session: Session, path: [String], dictionary: JSONDictionary, allKeysRead: Bool) {
+        init(session: Session, path: [JSONPathComponent], dictionary: JSONDictionary, allKeysRead: Bool) {
             self.session = session
             self.path = path
             self.dictionary = dictionary

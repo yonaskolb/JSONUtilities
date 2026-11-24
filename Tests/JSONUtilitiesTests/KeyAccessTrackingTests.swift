@@ -102,6 +102,28 @@ class KeyAccessTrackingTests: XCTestCase {
         XCTAssertEqual(unusedKeys.map { $0.description }, ["parent.typo"])
     }
 
+    func testUnusedKeysSortIndexesNumerically() throws {
+        let children: [JSONDictionary] = (0..<12).map { ["name": "\($0)", "extra": 1] }
+        let dictionary: JSONDictionary = ["name": "parent", "children": children]
+        let (_, unusedKeys) = try KeyAccessTracking.record(root: dictionary) {
+            try TrackedParent(jsonDictionary: dictionary)
+        }
+        XCTAssertEqual(unusedKeys.map { $0.description }, (0..<12).map { "children[\($0)].extra" })
+        XCTAssertEqual(unusedKeys[1].path, [.key("children"), .index(1)])
+    }
+
+    func testScopeWithPathComponents() throws {
+        let source: JSONDictionary = ["name": "a", "typo": 1]
+        let (_, unusedKeys) = try KeyAccessTracking.record {
+            try KeyAccessTracking.scope(source, at: "targets", "App", "sources", 1) {
+                XCTAssertEqual(KeyAccessTracking.currentPath, [.key("targets"), .key("App"), .key("sources"), .index(1)])
+                return try TrackedChild(jsonDictionary: source)
+            }
+        }
+        XCTAssertEqual(unusedKeys, [UnusedKey(path: ["targets", "App", "sources", 1], key: "typo")])
+        XCTAssertEqual(unusedKeys.map { $0.description }, ["targets.App.sources[1].typo"])
+    }
+
     func testFailedDecodesAreNotReported() throws {
         let dictionary: JSONDictionary = [
             "name": "parent",

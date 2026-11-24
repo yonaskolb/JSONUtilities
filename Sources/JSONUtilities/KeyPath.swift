@@ -42,6 +42,14 @@ public enum KeyPath: JSONKey {
         }
     }
 
+    /// The key path as path components for key access tracking
+    var pathComponents: [JSONPathComponent] {
+        switch self {
+        case let .key(key): return [.key(key)]
+        case let .keyPath(keys): return keys.map(JSONPathComponent.key)
+        }
+    }
+
     func getValue(dictionary: JSONDictionary) -> Any? {
 
         switch self {
