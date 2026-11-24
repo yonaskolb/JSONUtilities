@@ -115,7 +115,7 @@ class KeyAccessTrackingTests: XCTestCase {
     func testScopeWithPathComponents() throws {
         let source: JSONDictionary = ["name": "a", "typo": 1]
         let (_, unusedKeys) = try KeyAccessTracking.record {
-            try KeyAccessTracking.scope(source, at: "targets", "App", "sources", 1) {
+            try KeyAccessTracking.scope(source, at: ["targets", "App", "sources", 1]) {
                 XCTAssertEqual(KeyAccessTracking.currentPath, [.key("targets"), .key("App"), .key("sources"), .index(1)])
                 return try TrackedChild(jsonDictionary: source)
             }

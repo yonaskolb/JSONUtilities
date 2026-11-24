@@ -137,13 +137,14 @@ public enum KeyAccessTracking {
     ///
     /// - Parameters:
     ///   - dictionary: The dictionary being decoded
-    ///   - path: The path of this object relative to the current scope, e.g. `"settings"` or `"sources", .index(1)`
+    ///   - component: The path of this object relative to the current scope, e.g. `"settings"`
     ///   - allKeysRead: Pass true when the keys of this dictionary are data rather than known keys
-    public static func scope<R>(_ dictionary: JSONDictionary, at path: JSONPathComponent..., allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
-        return try scope(dictionary, at: path, allKeysRead: allKeysRead, body)
+    public static func scope<R>(_ dictionary: JSONDictionary, at component: JSONPathComponent, allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
+        return try scope(dictionary, at: [component], allKeysRead: allKeysRead, body)
     }
 
-    /// Decodes a nested object in its own scope, with a path relative to the current scope.
+    /// Decodes a nested object in its own scope, with a path relative to the current scope,
+    /// e.g. `["sources", .index(1)]` for an array element.
     public static func scope<R>(_ dictionary: JSONDictionary, at path: [JSONPathComponent], allKeysRead: Bool = false, _ body: () throws -> R) rethrows -> R {
         guard let parent = current else { return try body() }
 
