@@ -19,6 +19,7 @@ extension Dictionary {
         guard let dictionary = self as? JSONDictionary else {
             return nil
         }
+        KeyAccessTracking.didRead(keyPath.firstKey)
         return keyPath.getValue(dictionary: dictionary)
     }
 }

@@ -219,3 +219,25 @@ It's also possible to have an array of `JSONPrimitiveConvertible` values, for ex
 let urlsDictionary = ["urls": ["www.google.com", "www.yahoo.com"]]
 let urls: [URL] = try! urlsDictionary.json(atKeyPath: "urls") // [www.google.com, www.yahoo.com]
 ```
+
+## Unused key tracking
+
+`KeyAccessTracking` can report keys that were present in your JSON but never read while decoding it, which is useful for warning about typos or unsupported keys. It's opt-in and does nothing unless you decode inside `KeyAccessTracking.record`.
+
+```swift
+let json: JSONDictionary = ["name": "App", "child": ["name": "Child", "nmae": "typo"], "extra": 1]
+
+let (parent, unusedKeys) = try KeyAccessTracking.record(root: json) {
+    try Parent(jsonDictionary: json)
+}
+unusedKeys.map { $0.description } // ["child.nmae", "extra"]
+```
+
+Every `JSONObjectConvertible` decoded with `json(atKeyPath:)` gets its own scope, and unused keys are reported with their path, including array indexes like `children[1].key`. Keys are marked as read when they are accessed with `json(atKeyPath:)`, whether or not they decode successfully.
+
+- `KeyAccessTracking.markRead("key")` marks keys you read some other way, like `jsonDictionary["key"]`.
+- `KeyAccessTracking.markAllRead()` marks every key of the current object as read, for objects whose keys are data.
+- `KeyAccessTracking.scope(dictionary, at: ["sources", .index(1)]) { ... }` gives an object you decode yourself its own scope, at a path relative to the current one.
+- Each `UnusedKey` has a `path` of `JSONPathComponent`s (`.key` or `.index`) and the unused `key`. Its `description` is the full path, like `sources[1].buildphase`.
+- The current scope is a task local, so separate recordings never mix and child tasks continue their parent's recording. Threads that don't inherit task locals, like `DispatchQueue.concurrentPerform`, can continue it by capturing `KeyAccessTracking.currentContext` and running their decoding inside `KeyAccessTracking.withContext(context) { ... }`.
+
