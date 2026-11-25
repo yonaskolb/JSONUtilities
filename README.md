@@ -26,7 +26,7 @@ Add the files inside the `Sources` folder into your Xcode project.
 
 **Swift Package Manager:**
 
-Add the line `.package(url: "https://github.com/yonaskolb/JSONUtilities.git", from: "4.2.0")` to the dependencies in your `Package.swift`.
+Add the line `.package(url: "https://github.com/yonaskolb/JSONUtilities.git", from: "4.3.0")` to the dependencies in your `Package.swift`.
 
 ## Types supported
 
